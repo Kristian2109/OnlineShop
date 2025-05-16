@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 public class ProductController {
 
     private final ProductRepository productRepository;
@@ -61,83 +61,5 @@ public class ProductController {
             .map(ProductMapper::toExistingDto)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
-    }
-
-
-    @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<ExistingProductDto> createProduct(
-        @RequestParam String name,
-        @RequestParam String description,
-        @RequestParam BigDecimal price,
-        @RequestParam(required = false) String keywords,
-        @RequestParam("images") List<MultipartFile> images
-    ) {
-        List<CreateImageDto> imageDtos = images.stream()
-            .map(file -> {
-                try {
-                    return new CreateImageDto(
-                        file.getContentType(),
-                        Base64.getEncoder().encodeToString(file.getBytes())
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException("Error processing image", e);
-                }
-            })
-            .collect(Collectors.toList());
-
-        CreateProductDto createDto = new CreateProductDto(
-            name, description, keywords, price, imageDtos
-        );
-
-        Product product = ProductMapper.fromCreateDto(createDto);
-        Product saved = productRepository.save(product);
-        return ResponseEntity.ok(ProductMapper.toExistingDto(saved));
-    }
-
-
-    @PutMapping(value = "/{productId}", consumes = "multipart/form-data")
-    public ResponseEntity<ExistingProductDto> updateProduct(
-        @PathVariable Long productId,
-        @RequestParam String name,
-        @RequestParam String description,
-        @RequestParam BigDecimal price,
-        @RequestParam(required = false) String keywords,
-        @RequestParam("images") List<MultipartFile> images
-    ) throws IOException {
-        Optional<Product> opt = productRepository.findById(productId);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
-
-        Product existing = opt.get();
-
-        List<CreateImageDto> imageDtos = images.stream()
-            .map(file -> {
-                try {
-                    return new CreateImageDto(
-                        file.getContentType(),
-                        Base64.getEncoder().encodeToString(file.getBytes())
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException("Error processing image", e);
-                }
-            })
-            .collect(Collectors.toList());
-
-        CreateProductDto updateDto = new CreateProductDto(name, description, keywords, price, imageDtos);
-
-        Product updated = ProductMapper.fromCreateDto(updateDto);
-        updated.setId(existing.getId());
-        updated.setCreatedAt(existing.getCreatedAt());
-        productRepository.save(updated);
-
-        return ResponseEntity.ok(ProductMapper.toExistingDto(updated));
-    }
-
-    @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        if (productRepository.findById(productId).isPresent()) {
-            productRepository.deleteById(productId);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
     }
 }

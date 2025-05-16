@@ -20,6 +20,17 @@ public class Account {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    public AccountRole getRole() {
+        return role;
+    }
+
+    public void setRole(AccountRole role) {
+        this.role = role;
+    }
+
+    @Enumerated(EnumType.STRING)
+    private AccountRole role;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
