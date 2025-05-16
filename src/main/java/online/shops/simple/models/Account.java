@@ -24,8 +24,6 @@ public class Account {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-
-    // Getters
     public Long getId() {
         return id;
     }
@@ -58,7 +56,6 @@ public class Account {
         this.createdAt = createdAt;
     }
 
-    // toString
     @Override
     public String toString() {
         return "Account{" +
@@ -68,7 +65,6 @@ public class Account {
             '}';
     }
 
-    // equals and hashCode
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
