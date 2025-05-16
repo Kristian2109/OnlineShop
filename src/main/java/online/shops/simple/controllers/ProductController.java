@@ -1,19 +1,13 @@
 package online.shops.simple.controllers;
 
-import online.shops.simple.dtos.CreateImageDto;
-import online.shops.simple.dtos.CreateProductDto;
 import online.shops.simple.dtos.ExistingProductDto;
 import online.shops.simple.mappers.ProductMapper;
 import online.shops.simple.models.Product;
 import online.shops.simple.repositories.product.ProductRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
