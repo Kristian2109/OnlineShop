@@ -8,7 +8,7 @@ public record ExistingProductDto(
     Long id,
     String name,
     String description,
-    String keywords,
+    List<String> keywords,
     BigDecimal price,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,

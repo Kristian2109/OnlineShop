@@ -1,13 +1,19 @@
 package online.shops.simple.controllers;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import online.shops.simple.dtos.ExistingProductDto;
 import online.shops.simple.mappers.ProductMapper;
 import online.shops.simple.models.Product;
 import online.shops.simple.repositories.product.ProductRepository;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.math.BigDecimal;
-import java.util.*;
 
 @RestController
 @RequestMapping("/api/products")
@@ -31,11 +37,10 @@ public class ProductController {
         @RequestParam(required = false) List<String> keywords
     ) {
         boolean ascending = sortOrder.equalsIgnoreCase("asc");
-        String keywordString = (keywords == null || keywords.isEmpty()) ? null : String.join(",", keywords);
 
         List<Product> products = productRepository.search(
             search,
-            keywordString,
+            keywords,
             priceMin,
             priceMax,
             page,

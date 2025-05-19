@@ -1,12 +1,15 @@
 package online.shops.simple.repositories.product;
 
-import online.shops.simple.models.Product;
-import org.springframework.data.domain.*;
-import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Repository;
+
+import online.shops.simple.models.Product;
 
 @Repository
 public class JpaProductRepository implements ProductRepository {
@@ -39,7 +42,7 @@ public class JpaProductRepository implements ProductRepository {
     }
 
     @Override
-    public List<Product> search(String searchText, String keywords, BigDecimal minPrice, BigDecimal maxPrice, int page, int size, String sortBy, boolean ascending) {
+    public List<Product> search(String searchText, List<String> keywords, BigDecimal minPrice, BigDecimal maxPrice, int page, int size, String sortBy, boolean ascending) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy));
         return springRepo.searchProducts(searchText, keywords, minPrice, maxPrice, pageable).getContent();
     }

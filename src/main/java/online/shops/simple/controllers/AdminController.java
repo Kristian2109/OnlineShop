@@ -1,11 +1,13 @@
 package online.shops.simple.controllers;
 
-import online.shops.simple.dtos.CreateImageDto;
-import online.shops.simple.dtos.CreateProductDto;
-import online.shops.simple.dtos.ExistingProductDto;
-import online.shops.simple.mappers.ProductMapper;
-import online.shops.simple.models.Product;
-import online.shops.simple.repositories.product.ProductRepository;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,20 +18,23 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import online.shops.simple.dtos.CreateImageDto;
+import online.shops.simple.dtos.CreateProductDto;
+import online.shops.simple.dtos.ExistingProductDto;
+import online.shops.simple.mappers.ProductMapper;
+import online.shops.simple.models.Product;
+import online.shops.simple.repositories.keyword.KeywordRepository;
+import online.shops.simple.repositories.product.ProductRepository;
 
 @RestController
 @RequestMapping("/api/admin/products")
 public class AdminController {
     private final ProductRepository productRepository;
+    private final KeywordRepository keywordRepository;
 
-    public AdminController(ProductRepository productRepository) {
+    public AdminController(ProductRepository productRepository, KeywordRepository keywordRepository) {
         this.productRepository = productRepository;
+        this.keywordRepository = keywordRepository;
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -37,7 +42,7 @@ public class AdminController {
         @RequestParam String name,
         @RequestParam String description,
         @RequestParam BigDecimal price,
-        @RequestParam(required = false) String keywords,
+        @RequestParam(required = false) List<String> keywords,
         @RequestParam("images") List<MultipartFile> images
     ) {
         List<CreateImageDto> imageDtos = images.stream()
@@ -53,11 +58,13 @@ public class AdminController {
             })
             .collect(Collectors.toList());
 
+        List<String> keywordList = keywords != null ? keywords : new ArrayList<>();
+        
         CreateProductDto createDto = new CreateProductDto(
-            name, description, keywords, price, imageDtos
+            name, description, keywordList, price, imageDtos
         );
 
-        Product product = ProductMapper.fromCreateDto(createDto);
+        Product product = ProductMapper.fromCreateDto(createDto, keywordRepository);
         Product saved = productRepository.save(product);
         return ResponseEntity.ok(ProductMapper.toExistingDto(saved));
     }
@@ -69,7 +76,7 @@ public class AdminController {
         @RequestParam String name,
         @RequestParam String description,
         @RequestParam BigDecimal price,
-        @RequestParam(required = false) String keywords,
+        @RequestParam(required = false) List<String> keywords,
         @RequestParam("images") List<MultipartFile> images
     ) {
         Optional<Product> opt = productRepository.findById(productId);
@@ -90,9 +97,11 @@ public class AdminController {
             })
             .collect(Collectors.toList());
 
-        CreateProductDto updateDto = new CreateProductDto(name, description, keywords, price, imageDtos);
+        List<String> keywordList = keywords != null ? keywords : new ArrayList<>();
+        
+        CreateProductDto updateDto = new CreateProductDto(name, description, keywordList, price, imageDtos);
 
-        Product updated = ProductMapper.fromCreateDto(updateDto);
+        Product updated = ProductMapper.fromCreateDto(updateDto, keywordRepository);
         updated.setId(existing.getId());
         updated.setCreatedAt(existing.getCreatedAt());
         productRepository.save(updated);
