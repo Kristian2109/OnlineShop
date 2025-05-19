@@ -1,12 +1,7 @@
 package online.shops.simple.controllers;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,23 +13,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import online.shops.simple.dtos.CreateImageDto;
-import online.shops.simple.dtos.CreateProductDto;
 import online.shops.simple.dtos.ExistingProductDto;
-import online.shops.simple.mappers.ProductMapper;
-import online.shops.simple.models.Product;
-import online.shops.simple.repositories.keyword.KeywordRepository;
-import online.shops.simple.repositories.product.ProductRepository;
+import online.shops.simple.services.AdminService;
 
 @RestController
 @RequestMapping("/api/admin/products")
 public class AdminController {
-    private final ProductRepository productRepository;
-    private final KeywordRepository keywordRepository;
+    private final AdminService adminService;
 
-    public AdminController(ProductRepository productRepository, KeywordRepository keywordRepository) {
-        this.productRepository = productRepository;
-        this.keywordRepository = keywordRepository;
+    public AdminController(AdminService adminService) {
+        this.adminService = adminService;
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -45,30 +33,9 @@ public class AdminController {
         @RequestParam(required = false) List<String> keywords,
         @RequestParam("images") List<MultipartFile> images
     ) {
-        List<CreateImageDto> imageDtos = images.stream()
-            .map(file -> {
-                try {
-                    return new CreateImageDto(
-                        file.getContentType(),
-                        Base64.getEncoder().encodeToString(file.getBytes())
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException("Error processing image", e);
-                }
-            })
-            .collect(Collectors.toList());
-
-        List<String> keywordList = keywords != null ? keywords : new ArrayList<>();
-        
-        CreateProductDto createDto = new CreateProductDto(
-            name, description, keywordList, price, imageDtos
-        );
-
-        Product product = ProductMapper.fromCreateDto(createDto, keywordRepository);
-        Product saved = productRepository.save(product);
-        return ResponseEntity.ok(ProductMapper.toExistingDto(saved));
+        ExistingProductDto product = adminService.createProduct(name, description, price, keywords, images);
+        return ResponseEntity.ok(product);
     }
-
 
     @PutMapping(value = "/{productId}", consumes = "multipart/form-data")
     public ResponseEntity<ExistingProductDto> updateProduct(
@@ -79,42 +46,14 @@ public class AdminController {
         @RequestParam(required = false) List<String> keywords,
         @RequestParam("images") List<MultipartFile> images
     ) {
-        Optional<Product> opt = productRepository.findById(productId);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
-
-        Product existing = opt.get();
-
-        List<CreateImageDto> imageDtos = images.stream()
-            .map(file -> {
-                try {
-                    return new CreateImageDto(
-                        file.getContentType(),
-                        Base64.getEncoder().encodeToString(file.getBytes())
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException("Error processing image", e);
-                }
-            })
-            .collect(Collectors.toList());
-
-        List<String> keywordList = keywords != null ? keywords : new ArrayList<>();
-        
-        CreateProductDto updateDto = new CreateProductDto(name, description, keywordList, price, imageDtos);
-
-        Product updated = ProductMapper.fromCreateDto(updateDto, keywordRepository);
-        updated.setId(existing.getId());
-        updated.setCreatedAt(existing.getCreatedAt());
-        productRepository.save(updated);
-
-        return ResponseEntity.ok(ProductMapper.toExistingDto(updated));
+        return adminService.updateProduct(productId, name, description, price, keywords, images)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        if (productRepository.findById(productId).isPresent()) {
-            productRepository.deleteById(productId);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        boolean deleted = adminService.deleteProduct(productId);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

@@ -11,18 +11,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import online.shops.simple.dtos.ExistingProductDto;
-import online.shops.simple.mappers.ProductMapper;
-import online.shops.simple.models.Product;
-import online.shops.simple.repositories.product.ProductRepository;
+import online.shops.simple.services.ProductService;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    public ProductController(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    public ProductController(ProductService productService) {
+        this.productService = productService;
     }
 
     @GetMapping
@@ -36,28 +34,14 @@ public class ProductController {
         @RequestParam(required = false) String search,
         @RequestParam(required = false) List<String> keywords
     ) {
-        boolean ascending = sortOrder.equalsIgnoreCase("asc");
-
-        List<Product> products = productRepository.search(
-            search,
-            keywords,
-            priceMin,
-            priceMax,
-            page,
-            limit,
-            sortBy,
-            ascending
+        return productService.getProducts(
+            page, limit, sortBy, sortOrder, priceMin, priceMax, search, keywords
         );
-
-        return products.stream()
-            .map(ProductMapper::toExistingDto)
-            .toList();
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<ExistingProductDto> getProductById(@PathVariable Long productId) {
-        return productRepository.findById(productId)
-            .map(ProductMapper::toExistingDto)
+        return productService.getProductById(productId)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
