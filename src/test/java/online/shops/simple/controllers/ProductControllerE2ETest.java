@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,19 +48,15 @@ public class ProductControllerE2ETest {
 
     @BeforeEach
     public void setup() {
-        // Clear existing data
-        // Since we don't have deleteAll() method, we'll find all products and delete them one by one
         List<Product> allProducts = productRepository.findAll(0, 100, "id", true);
         for (Product product : allProducts) {
             productRepository.deleteById(product.getId());
         }
 
-        // Create test products
         createTestProducts();
     }
 
     private void createTestProducts() {
-        // Create product 1
         List<String> keywords1 = Arrays.asList("electronic", "gadget");
         CreateProductDto dto1 = new CreateProductDto(
                 "Smartphone",
@@ -73,7 +68,6 @@ public class ProductControllerE2ETest {
         Product product1 = ProductMapper.fromCreateDto(dto1, keywordRepository);
         productRepository.save(product1);
 
-        // Create product 2
         List<String> keywords2 = Arrays.asList("clothing", "fashion");
         CreateProductDto dto2 = new CreateProductDto(
                 "T-shirt",
@@ -85,7 +79,6 @@ public class ProductControllerE2ETest {
         Product product2 = ProductMapper.fromCreateDto(dto2, keywordRepository);
         productRepository.save(product2);
 
-        // Create product 3
         List<String> keywords3 = Arrays.asList("electronic", "audio");
         CreateProductDto dto3 = new CreateProductDto(
                 "Headphones",
@@ -208,7 +201,6 @@ public class ProductControllerE2ETest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().size()).isEqualTo(2);
         
-        // Check second page
         url = getBaseUrl() + "?page=1&limit=2";
         
         response = restTemplate.exchange(
@@ -225,7 +217,6 @@ public class ProductControllerE2ETest {
 
     @Test
     public void testGetProductById() {
-        // Get all products first to find an ID
         ResponseEntity<List<ExistingProductDto>> allProductsResponse = restTemplate.exchange(
                 getBaseUrl(),
                 HttpMethod.GET,
@@ -238,7 +229,6 @@ public class ProductControllerE2ETest {
         
         Long productId = allProductsResponse.getBody().get(0).id();
         
-        // Test getting product by ID
         ResponseEntity<ExistingProductDto> response = restTemplate.getForEntity(
                 getBaseUrl() + "/" + productId,
                 ExistingProductDto.class
