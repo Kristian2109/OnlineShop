@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import online.shops.simple.dtos.CreateOrderDto;
 import online.shops.simple.dtos.OrderDto;
 import online.shops.simple.models.OrderStatus;
+import online.shops.simple.services.AccountService;
 import online.shops.simple.services.OrderService;
 
 @RestController
@@ -26,17 +29,34 @@ import online.shops.simple.services.OrderService;
 public class OrderController {
     
     private final OrderService orderService;
+    private final AccountService accountService;
     
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, AccountService accountService) {
         this.orderService = orderService;
+        this.accountService = accountService;
     }
     
     @PostMapping
     public ResponseEntity<OrderDto> createOrder(@RequestBody CreateOrderDto createOrderDto) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        if (principal instanceof UserDetails userDetails) {
+            String username = userDetails.getUsername();
+            Long userId = accountService.getAccountIdByUsername(username);
+            
+            createOrderDto = new CreateOrderDto(
+                userId,
+                createOrderDto.items(),
+                createOrderDto.shippingAddress(),
+                createOrderDto.paymentMethod(),
+                createOrderDto.notes()
+            );
+        }
+        
         OrderDto newOrder = orderService.createOrder(createOrderDto);
         return ResponseEntity.ok(newOrder);
     }
-    
+
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDto> getOrderById(@PathVariable Long orderId) {
         return orderService.getOrderById(orderId)

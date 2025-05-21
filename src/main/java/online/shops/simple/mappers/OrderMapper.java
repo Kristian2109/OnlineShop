@@ -16,17 +16,19 @@ import online.shops.simple.repositories.product.ProductRepository;
 public class OrderMapper {
     
     public static Order fromCreateDto(CreateOrderDto dto, AccountRepository accountRepo, ProductRepository productRepo) {
-        Account customer = accountRepo.findById(dto.customerId())
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-        
         Order order = new Order();
-        order.setCustomer(customer);
+        
+        if (dto.customerId() != null) {
+            Account customer = accountRepo.findById(dto.customerId())
+                    .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+            order.setCustomer(customer);
+        }
+        
         order.setShippingAddress(dto.shippingAddress());
         order.setPaymentMethod(dto.paymentMethod());
         order.setNotes(dto.notes());
         order.setStatus(OrderStatus.PENDING);
         
-        // Add items to the order
         dto.items().forEach(itemDto -> {
             Product product = productRepo.findById(itemDto.productId())
                     .orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -35,17 +37,24 @@ public class OrderMapper {
             order.addItem(orderItem);
         });
         
-        // Calculate the total price
         order.calculateTotalPrice();
         
         return order;
     }
     
     public static OrderDto toOrderDto(Order order) {
+        Long customerId = null;
+        String customerUsername = null;
+        
+        if (order.getCustomer() != null) {
+            customerId = order.getCustomer().getId();
+            customerUsername = order.getCustomer().getUsername();
+        }
+        
         return new OrderDto(
                 order.getId(),
-                order.getCustomer().getId(),
-                order.getCustomer().getUsername(),
+                customerId,
+                customerUsername,
                 order.getItems().stream()
                         .map(OrderMapper::toOrderItemDto)
                         .collect(Collectors.toList()),

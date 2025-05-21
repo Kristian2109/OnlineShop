@@ -39,7 +39,6 @@ public class JpaOrderRepositoryTest {
     
     @BeforeEach
     public void setup() {
-        // Create test orders
         Account account = new Account();
         account.setId(1L);
         account.setUsername("testuser");
