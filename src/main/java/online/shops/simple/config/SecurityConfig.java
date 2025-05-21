@@ -1,9 +1,10 @@
 package online.shops.simple.config;
 
-import online.shops.simple.middleware.JwtAuthenticationFilter;
-import online.shops.simple.models.AccountRole;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -19,9 +20,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
 
-import java.util.List;
+import online.shops.simple.middleware.JwtAuthenticationFilter;
+import online.shops.simple.models.AccountRole;
 
 @Configuration
 @EnableMethodSecurity
@@ -45,7 +46,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/products/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/products/**", "/api/keywords/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
                 .requestMatchers("/api/admin/**").hasRole(AccountRole.ADMIN.name())
                 .anyRequest().authenticated()

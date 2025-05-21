@@ -26,4 +26,11 @@ public interface ProductRepository {
         String sortBy,
         boolean ascending
     );
+    
+    long countProducts(
+        String searchText,
+        List<String> keywords,
+        BigDecimal minPrice,
+        BigDecimal maxPrice
+    );
 }

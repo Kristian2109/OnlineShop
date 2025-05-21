@@ -29,4 +29,20 @@ public interface SpringDataProductRepository extends JpaRepository<Product, Long
         @Param("maxPrice") BigDecimal maxPrice,
         Pageable pageable
     );
+    
+    @Query("""
+        SELECT COUNT(DISTINCT p) FROM Product p
+        LEFT JOIN p.keywords k
+        WHERE (:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) 
+                             OR LOWER(p.description) LIKE LOWER(CONCAT('%', :search, '%')))
+        AND (:keywords IS NULL OR k.name IN :keywords)
+        AND (:minPrice IS NULL OR p.price >= :minPrice)
+        AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+    """)
+    long countProducts(
+        @Param("search") String search,
+        @Param("keywords") List<String> keywords,
+        @Param("minPrice") BigDecimal minPrice,
+        @Param("maxPrice") BigDecimal maxPrice
+    );
 }

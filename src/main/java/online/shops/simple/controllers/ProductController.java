@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import online.shops.simple.dtos.ExistingProductDto;
+import online.shops.simple.dtos.ProductPageDto;
 import online.shops.simple.services.ProductService;
 
 @RestController
@@ -24,7 +25,7 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<ExistingProductDto> getProducts(
+    public ProductPageDto getProducts(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int limit,
         @RequestParam(defaultValue = "createdAt") String sortBy,

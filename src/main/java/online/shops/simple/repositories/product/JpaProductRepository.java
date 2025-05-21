@@ -46,4 +46,9 @@ public class JpaProductRepository implements ProductRepository {
         Pageable pageable = PageRequest.of(page, size, Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy));
         return springRepo.searchProducts(searchText, keywords, minPrice, maxPrice, pageable).getContent();
     }
+
+    @Override
+    public long countProducts(String searchText, List<String> keywords, BigDecimal minPrice, BigDecimal maxPrice) {
+        return springRepo.countProducts(searchText, keywords, minPrice, maxPrice);
+    }
 }
