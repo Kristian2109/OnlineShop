@@ -34,8 +34,6 @@ public class AdminInitializer implements CommandLineRunner {
             admin.setPasswordHash(passwordEncoder.encode(adminPassword));
             admin.setRole(AccountRole.ADMIN);
             userRepository.save(admin);
-            System.out.println("🛡️ Admin user created: " + adminUsername);
-            System.out.println("🔑 Password: " + adminPassword);
         }
     }
 }
