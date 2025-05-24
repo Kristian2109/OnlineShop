@@ -9,5 +9,7 @@ public record CreateOrderDto(
     List<CreateOrderItemDto> items,
     Address shippingAddress,
     String paymentMethod,
-    String notes
+    String notes,
+    String phoneNumber,
+    String email
 ) {} 

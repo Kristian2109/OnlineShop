@@ -28,7 +28,9 @@ public class OrderMapper {
         order.setPaymentMethod(dto.paymentMethod());
         order.setNotes(dto.notes());
         order.setStatus(OrderStatus.PENDING);
-        
+        order.setPhoneNumber(dto.phoneNumber());
+        order.setEmail(dto.email());
+
         dto.items().forEach(itemDto -> {
             Product product = productRepo.findById(itemDto.productId())
                     .orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -59,12 +61,14 @@ public class OrderMapper {
                         .map(OrderMapper::toOrderItemDto)
                         .collect(Collectors.toList()),
                 order.getOrderDate(),
+                order.getEmail(),
                 order.getStatus(),
                 order.getTotalPrice(),
                 order.getShippingAddress(),
                 order.getPaymentMethod(),
                 order.getTrackingNumber(),
                 order.getNotes(),
+                order.getPhoneNumber(),
                 order.getCreatedAt(),
                 order.getUpdatedAt()
         );

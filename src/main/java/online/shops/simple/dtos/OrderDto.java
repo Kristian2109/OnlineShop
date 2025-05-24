@@ -13,12 +13,14 @@ public record OrderDto(
     String customerUsername,
     List<OrderItemDto> items,
     LocalDateTime orderDate,
+    String email,
     OrderStatus status,
     BigDecimal totalPrice,
     Address shippingAddress,
     String paymentMethod,
     String trackingNumber,
     String notes,
+    String phoneNumber,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {} 

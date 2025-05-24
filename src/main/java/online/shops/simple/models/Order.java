@@ -56,7 +56,13 @@ public class Order {
     
     @Column(name = "payment_method")
     private String paymentMethod;
-    
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "email", nullable = false)
+    private String email;
+
     @Column(name = "tracking_number")
     private String trackingNumber;
     

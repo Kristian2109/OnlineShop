@@ -49,7 +49,9 @@ public class OrderController {
                 createOrderDto.items(),
                 createOrderDto.shippingAddress(),
                 createOrderDto.paymentMethod(),
-                createOrderDto.notes()
+                createOrderDto.notes(),
+                createOrderDto.phoneNumber(),
+                createOrderDto.email()
             );
         }
         
