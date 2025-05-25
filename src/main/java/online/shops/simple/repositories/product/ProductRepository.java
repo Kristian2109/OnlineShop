@@ -10,6 +10,8 @@ public interface ProductRepository {
 
     Optional<Product> findById(Long id);
 
+    Optional<Product> findByIdAndNotArchived(Long id);
+
     Product save(Product product);
 
     void deleteById(Long id);
@@ -24,13 +26,15 @@ public interface ProductRepository {
         int page,
         int size,
         String sortBy,
-        boolean ascending
+        boolean ascending,
+        Boolean isArchived
     );
     
     long countProducts(
         String searchText,
         List<String> keywords,
         BigDecimal minPrice,
-        BigDecimal maxPrice
+        BigDecimal maxPrice,
+        Boolean isArchived
     );
 }

@@ -31,9 +31,10 @@ public class AdminController {
         @RequestParam String description,
         @RequestParam BigDecimal price,
         @RequestParam(required = false) List<String> keywords,
-        @RequestParam("images") List<MultipartFile> images
+        @RequestParam("images") List<MultipartFile> images,
+        @RequestParam(defaultValue = "false") Boolean isArchived
     ) {
-        ExistingProductDto product = adminService.createProduct(name, description, price, keywords, images);
+        ExistingProductDto product = adminService.createProduct(name, description, price, keywords, images, isArchived);
         return ResponseEntity.ok(product);
     }
 
@@ -44,9 +45,10 @@ public class AdminController {
         @RequestParam String description,
         @RequestParam BigDecimal price,
         @RequestParam(required = false) List<String> keywords,
-        @RequestParam("images") List<MultipartFile> images
+        @RequestParam("images") List<MultipartFile> images,
+        @RequestParam(defaultValue = "false") Boolean isArchived
     ) {
-        return adminService.updateProduct(productId, name, description, price, keywords, images)
+        return adminService.updateProduct(productId, name, description, price, keywords, images, isArchived)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }

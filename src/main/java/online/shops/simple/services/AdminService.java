@@ -34,7 +34,8 @@ public class AdminService {
             String description,
             BigDecimal price,
             List<String> keywords,
-            List<MultipartFile> images) {
+            List<MultipartFile> images,
+            Boolean isArchived) {
         
         List<CreateImageDto> imageDtos = processImageFiles(images);
         List<String> keywordList = keywords != null ? keywords : new ArrayList<>();
@@ -54,7 +55,9 @@ public class AdminService {
             String description,
             BigDecimal price,
             List<String> keywords,
-            List<MultipartFile> images) {
+            List<MultipartFile> images,
+            Boolean isArchived
+            ) {
         
         Optional<Product> opt = productRepository.findById(productId);
         if (opt.isEmpty()) return Optional.empty();
@@ -69,6 +72,7 @@ public class AdminService {
         Product updated = ProductMapper.fromCreateDto(updateDto, keywordRepository);
         updated.setId(existing.getId());
         updated.setCreatedAt(existing.getCreatedAt());
+        updated.setIsArchived(isArchived);
         Product saved = productRepository.save(updated);
         
         return Optional.of(ProductMapper.toExistingDto(saved));

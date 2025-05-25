@@ -12,5 +12,6 @@ public record ExistingProductDto(
     BigDecimal price,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    List<String> imagesBase64
+    List<String> imagesBase64,
+    Boolean isArchived
 ) {}

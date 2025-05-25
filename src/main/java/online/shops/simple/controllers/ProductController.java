@@ -33,10 +33,11 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal priceMin,
         @RequestParam(required = false) BigDecimal priceMax,
         @RequestParam(required = false) String search,
-        @RequestParam(required = false) List<String> keywords
+        @RequestParam(required = false) List<String> keywords,
+        @RequestParam(required = false) Boolean isArchived
     ) {
         return productService.getProducts(
-            page, limit, sortBy, sortOrder, priceMin, priceMax, search, keywords
+            page, limit, sortBy, sortOrder, priceMin, priceMax, search, keywords, isArchived
         );
     }
 

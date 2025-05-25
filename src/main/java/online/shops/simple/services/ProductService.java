@@ -32,7 +32,9 @@ public class ProductService {
             BigDecimal priceMin,
             BigDecimal priceMax,
             String search,
-            List<String> keywords) {
+            List<String> keywords,
+            Boolean isArchived
+            ) {
         
         boolean ascending = sortOrder.equalsIgnoreCase("asc");
         
@@ -46,7 +48,8 @@ public class ProductService {
             page,
             cappedLimit,
             sortBy,
-            ascending
+            ascending,
+            isArchived
         );
         
         List<ExistingProductDto> productDtos = products.stream()
@@ -57,14 +60,15 @@ public class ProductService {
             search,
             keywords,
             priceMin,
-            priceMax
+            priceMax,
+            isArchived
         );
         
         return new ProductPageDto(productDtos, totalCount);
     }
     
     public Optional<ExistingProductDto> getProductById(Long productId) {
-        return productRepository.findById(productId)
+        return productRepository.findByIdAndNotArchived(productId)
             .map(ProductMapper::toExistingDto);
     }
 } 

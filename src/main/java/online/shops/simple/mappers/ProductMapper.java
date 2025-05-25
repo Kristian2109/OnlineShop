@@ -39,7 +39,8 @@ public class ProductMapper {
             product.getPrice(),
             product.getCreatedAt(),
             product.getUpdatedAt(),
-            encodedImages
+            encodedImages,
+            product.getIsArchived()
         );
     }
 
