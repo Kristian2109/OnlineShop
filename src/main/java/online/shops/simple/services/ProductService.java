@@ -124,11 +124,12 @@ public class ProductService {
         existingProduct.setKeywords(keywords);
 
         List<String> imagesToDelete = new ArrayList<>(updateDto.getImagesToDelete());
-        for (String oldImagePath : imagesToDelete) {
+        for (String oldImage : imagesToDelete) {
             try {
-                imageService.deleteImage(oldImagePath);
+                String filename = oldImage.replaceAll(".*/", "");
+                imageService.deleteImage(filename);
             } catch (IOException e) {
-                System.err.println("[ProductService] Failed to delete old image file: " + oldImagePath + " Error: " + e.getMessage());
+                System.err.println("[ProductService] Failed to delete old image file: " + oldImage + " Error: " + e.getMessage());
             }
         }
 
