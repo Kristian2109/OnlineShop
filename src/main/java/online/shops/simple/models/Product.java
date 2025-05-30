@@ -55,7 +55,7 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ProductImage> images;
+    private List<ProductImage> images = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

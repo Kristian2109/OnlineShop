@@ -1,18 +1,21 @@
 package online.shops.simple.mappers;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import online.shops.simple.dtos.CreateImageDto;
+import org.springframework.web.multipart.MultipartFile;
+
 import online.shops.simple.dtos.CreateProductDto;
 import online.shops.simple.dtos.ExistingProductDto;
+import online.shops.simple.dtos.ProductImageDto;
 import online.shops.simple.models.Keyword;
 import online.shops.simple.models.Product;
 import online.shops.simple.models.ProductImage;
 import online.shops.simple.repositories.keyword.KeywordRepository;
+import online.shops.simple.services.ImageService;
 
 public class ProductMapper {
 
@@ -23,8 +26,12 @@ public class ProductMapper {
     }
 
     public static ExistingProductDto toExistingDto(Product product) {
-        List<String> encodedImages = product.getImages().stream()
-            .map(ProductMapper::encodeImage)
+        List<ProductImageDto> imageUrls = product.getImages().stream()
+            .map(image -> new ProductImageDto(
+                "/api/images/" + image.getImagePath(),
+                image.getFilename(),
+                image.getPosition()
+            ))
             .collect(Collectors.toList());
 
         List<String> keywordNames = product.getKeywords().stream()
@@ -39,18 +46,25 @@ public class ProductMapper {
             product.getPrice(),
             product.getCreatedAt(),
             product.getUpdatedAt(),
-            encodedImages,
+            imageUrls,
             product.getIsArchived()
         );
     }
 
-    public static Product fromCreateDto(CreateProductDto dto, KeywordRepository keywordRepo) {
+    public static Product fromCreateDto(CreateProductDto dto, KeywordRepository keywordRepo, ImageService imageService) {
+        return fromCreateDto(dto, keywordRepo, imageService, null);
+    }
+
+    public static Product fromCreateDto(CreateProductDto dto, KeywordRepository keywordRepo, ImageService imageService, Boolean isArchived) {
         Product product = new Product();
         product.setName(dto.name());
         product.setDescription(dto.description());
         product.setPrice(dto.price());
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
+        if (isArchived != null) {
+            product.setIsArchived(isArchived);
+        }
 
         if (dto.keywords() != null && !dto.keywords().isEmpty()) {
             List<Keyword> existingKeywords = keywordRepo.findAllByNameIn(dto.keywords());
@@ -69,16 +83,23 @@ public class ProductMapper {
                     productKeywords.add(newKeyword);
                 }
             }
-            
             product.setKeywords(productKeywords);
         }
 
         if (dto.images() != null && !dto.images().isEmpty()) {
-            List<ProductImage> imageList = dto.images().stream()
-                .map(ProductMapper::mapImage)
-                .collect(Collectors.toList());
-
-            imageList.forEach(img -> img.setProduct(product));
+            List<ProductImage> imageList = new ArrayList<>();
+            for (int i = 0; i < dto.images().size(); i++) {
+                MultipartFile file = dto.images().get(i);
+                if (file != null && !file.isEmpty()) {
+                    try {
+                        ProductImage productImage = imageService.storeImage(file, i);
+                        productImage.setProduct(product);
+                        imageList.add(productImage);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to store image: " + file.getOriginalFilename(), e);
+                    }
+                }
+            }
             product.setImages(imageList);
         }
 
@@ -87,20 +108,8 @@ public class ProductMapper {
 
     public static Product fromCreateDto(CreateProductDto dto) {
         if (keywordRepository == null) {
-            throw new IllegalStateException("KeywordRepository must be set before calling this method");
+            throw new IllegalStateException("KeywordRepository must be set before calling this method.");
         }
-        return fromCreateDto(dto, keywordRepository);
-    }
-
-    private static ProductImage mapImage(CreateImageDto dto) {
-        ProductImage image = new ProductImage();
-        image.setMimeType(dto.mimeType());
-        image.setImageData(Base64.getDecoder().decode(dto.base64Data()));
-        return image;
-    }
-
-    private static String encodeImage(ProductImage image) {
-        String base64 = Base64.getEncoder().encodeToString(image.getImageData());
-        return "data:" + image.getMimeType() + ";base64," + base64;
+        throw new IllegalStateException("This fromCreateDto method is incomplete without ImageService. Use the overloaded version.");
     }
 }

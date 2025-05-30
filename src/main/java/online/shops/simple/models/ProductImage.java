@@ -1,6 +1,14 @@
 package online.shops.simple.models;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "product_images")
@@ -10,12 +18,8 @@ public class ProductImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Lob
-    @Column(name = "image_data", nullable = false, columnDefinition = "MEDIUMBLOB")
-    private byte[] imageData;
-
-    @Column(name = "mime_type", nullable = false)
-    private String mimeType;
+    @Column(name = "image_path", nullable = false)
+    private String imagePath;
 
     @Column(name = "filename")
     private String filename;
@@ -35,20 +39,12 @@ public class ProductImage {
         this.id = id;
     }
 
-    public byte[] getImageData() {
-        return imageData;
+    public String getImagePath() {
+        return imagePath;
     }
 
-    public void setImageData(byte[] imageData) {
-        this.imageData = imageData;
-    }
-
-    public String getMimeType() {
-        return mimeType;
-    }
-
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     public String getFilename() {

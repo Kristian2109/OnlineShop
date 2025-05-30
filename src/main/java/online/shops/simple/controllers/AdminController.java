@@ -3,6 +3,7 @@ package online.shops.simple.controllers;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,16 +14,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import online.shops.simple.dtos.CreateProductDto;
 import online.shops.simple.dtos.ExistingProductDto;
-import online.shops.simple.services.AdminService;
+import online.shops.simple.services.ProductService;
 
 @RestController
 @RequestMapping("/api/admin/products")
 public class AdminController {
-    private final AdminService adminService;
+    private final ProductService productService;
 
-    public AdminController(AdminService adminService) {
-        this.adminService = adminService;
+    public AdminController(ProductService productService) {
+        this.productService = productService;
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -31,11 +33,12 @@ public class AdminController {
         @RequestParam String description,
         @RequestParam BigDecimal price,
         @RequestParam(required = false) List<String> keywords,
-        @RequestParam("images") List<MultipartFile> images,
+        @RequestParam(name = "images", required = false) List<MultipartFile> images,
         @RequestParam(defaultValue = "false") Boolean isArchived
     ) {
-        ExistingProductDto product = adminService.createProduct(name, description, price, keywords, images, isArchived);
-        return ResponseEntity.ok(product);
+        CreateProductDto createDto = new CreateProductDto(name, description, keywords, price, images);
+        ExistingProductDto product = productService.createProduct(createDto, isArchived);
+        return ResponseEntity.status(HttpStatus.CREATED).body(product);
     }
 
     @PutMapping(value = "/{productId}", consumes = "multipart/form-data")
@@ -45,17 +48,22 @@ public class AdminController {
         @RequestParam String description,
         @RequestParam BigDecimal price,
         @RequestParam(required = false) List<String> keywords,
-        @RequestParam("images") List<MultipartFile> images,
-        @RequestParam(defaultValue = "false") Boolean isArchived
+        @RequestParam(name = "images", required = false) List<MultipartFile> images,
+        @RequestParam Boolean isArchived
     ) {
-        return adminService.updateProduct(productId, name, description, price, keywords, images, isArchived)
+        CreateProductDto updateDto = new CreateProductDto(name, description, keywords, price, images);
+        return productService.updateProduct(productId, updateDto, isArchived)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        boolean deleted = adminService.deleteProduct(productId);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        try {
+            productService.deleteProduct(productId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
