@@ -3,6 +3,8 @@ package online.shops.simple.controllers;
 import java.math.BigDecimal;
 import java.util.List;
 
+import jakarta.validation.Valid;
+import online.shops.simple.dtos.UpdateProductDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,15 +46,9 @@ public class AdminController {
     @PutMapping(value = "/{productId}", consumes = "multipart/form-data")
     public ResponseEntity<ExistingProductDto> updateProduct(
         @PathVariable Long productId,
-        @RequestParam String name,
-        @RequestParam String description,
-        @RequestParam BigDecimal price,
-        @RequestParam(required = false) List<String> keywords,
-        @RequestParam(name = "images", required = false) List<MultipartFile> images,
-        @RequestParam Boolean isArchived
+        @Valid UpdateProductDto updateProductDto
     ) {
-        CreateProductDto updateDto = new CreateProductDto(name, description, keywords, price, images);
-        return productService.updateProduct(productId, updateDto, isArchived)
+        return productService.updateProduct(productId, updateProductDto)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }

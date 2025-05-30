@@ -28,7 +28,7 @@ public class ProductMapper {
     public static ExistingProductDto toExistingDto(Product product) {
         List<ProductImageDto> imageUrls = product.getImages().stream()
             .map(image -> new ProductImageDto(
-                "/api/images/" + image.getImagePath(),
+                "/images/" + image.getImagePath(),
                 image.getFilename(),
                 image.getPosition()
             ))

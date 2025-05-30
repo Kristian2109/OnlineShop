@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import online.shops.simple.dtos.UpdateProductDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -98,7 +99,7 @@ public class ProductService {
     }
 
     @Transactional
-    public Optional<ExistingProductDto> updateProduct(Long productId, CreateProductDto updateDto, Boolean isArchived) {
+    public Optional<ExistingProductDto> updateProduct(Long productId, UpdateProductDto updateDto) {
         Optional<Product> productOptional = productRepository.findById(productId);
         if (productOptional.isEmpty()) {
             return Optional.empty();
@@ -106,56 +107,47 @@ public class ProductService {
 
         Product existingProduct = productOptional.get();
 
-        existingProduct.setName(updateDto.name());
-        existingProduct.setDescription(updateDto.description());
-        existingProduct.setPrice(updateDto.price());
-        if (isArchived != null) {
-            existingProduct.setIsArchived(isArchived);
-        }
+        existingProduct.setName(updateDto.getName());
+        existingProduct.setDescription(updateDto.getDescription());
+        existingProduct.setPrice(updateDto.getPrice());
 
-        if (updateDto.keywords() != null) {
-            List<Keyword> keywords = new ArrayList<>();
-            for (String keywordName : updateDto.keywords()) {
-                Keyword keyword = keywordRepository.findByName(keywordName)
-                    .orElseGet(() -> {
-                        Keyword newKeyword = new Keyword();
-                        newKeyword.setName(keywordName);
-                        return newKeyword;
-                    });
-                keywords.add(keyword);
+        List<Keyword> keywords = new ArrayList<>();
+        for (String keywordName : updateDto.getKeywords()) {
+            Keyword keyword = keywordRepository.findByName(keywordName)
+                .orElseGet(() -> {
+                    Keyword newKeyword = new Keyword();
+                    newKeyword.setName(keywordName);
+                    return newKeyword;
+                });
+            keywords.add(keyword);
+        }
+        existingProduct.setKeywords(keywords);
+
+        List<String> imagesToDelete = new ArrayList<>(updateDto.getImagesToDelete());
+        for (String oldImagePath : imagesToDelete) {
+            try {
+                imageService.deleteImage(oldImagePath);
+            } catch (IOException e) {
+                System.err.println("[ProductService] Failed to delete old image file: " + oldImagePath + " Error: " + e.getMessage());
             }
-            existingProduct.setKeywords(keywords);
         }
 
-        List<ProductImage> imagesToDelete = new ArrayList<>(existingProduct.getImages());
-        for (ProductImage oldImage : imagesToDelete) {
-            if (oldImage.getImagePath() != null && !oldImage.getImagePath().isBlank()) {
+        List<ProductImage> lastingImages = existingProduct.getImages()
+            .stream()
+            .filter(image -> !updateDto.getImagesToDelete().contains(image.getImagePath()))
+            .toList();
+
+        existingProduct.setImages(lastingImages);
+
+        for (int i = 0; i < updateDto.getNewImages().size(); i++) {
+            MultipartFile file = updateDto.getNewImages().get(i);
+            if (file != null && !file.isEmpty()) {
                 try {
-                    imageService.deleteImage(oldImage.getImagePath());
+                    ProductImage newProductImage = imageService.storeImage(file, i);
+                    newProductImage.setProduct(existingProduct);
+                    existingProduct.getImages().add(newProductImage);
                 } catch (IOException e) {
-                    System.err.println("[ProductService] Failed to delete old image file: " + oldImage.getImagePath() + " Error: " + e.getMessage());
-                }
-            } else {
-                System.out.println("[ProductService] Skipping file deletion for old image ID=" + oldImage.getId() + " because imagePath is null or blank.");
-            }
-        }
-
-        existingProduct.getImages().clear();
-
-        if (updateDto.images() != null && !updateDto.images().isEmpty()) {
-            if (existingProduct.getImages() == null) {
-                existingProduct.setImages(new ArrayList<>());
-            }
-            for (int i = 0; i < updateDto.images().size(); i++) {
-                MultipartFile file = updateDto.images().get(i);
-                if (file != null && !file.isEmpty()) {
-                    try {
-                        ProductImage newProductImage = imageService.storeImage(file, i);
-                        newProductImage.setProduct(existingProduct);
-                        existingProduct.getImages().add(newProductImage);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to store new image: " + file.getOriginalFilename(), e);
-                    }
+                    throw new RuntimeException("Failed to store new image: " + file.getOriginalFilename(), e);
                 }
             }
         }
@@ -167,16 +159,17 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long productId) throws IOException {
         Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            if (product.getImages() != null) {
-                for (ProductImage image : product.getImages()) {
-                    imageService.deleteImage(image.getImagePath());
-                }
-            }
-            productRepository.deleteById(productId);
-        } else {
-            
+        if (productOptional.isEmpty()) {
+            return;
         }
+
+        Product product = productOptional.get();
+        if (product.getImages() != null) {
+            for (ProductImage image : product.getImages()) {
+                imageService.deleteImage(image.getImagePath());
+            }
+        }
+        productRepository.deleteById(productId);
+
     }
 } 

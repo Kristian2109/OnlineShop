@@ -129,7 +129,8 @@ public class Product {
     }
 
     public void setImages(List<ProductImage> images) {
-        this.images = images;
+        this.images.clear();
+        this.images.addAll(images);
     }
 
     public Boolean getIsArchived() {
