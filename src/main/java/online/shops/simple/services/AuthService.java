@@ -40,11 +40,11 @@ public class AuthService {
         return accountRepository.findByUsername(username).isPresent();
     }
 
-    public void registerUser(String username, String password) {
+    public Account registerUser(String username, String password) {
         Account account = new Account();
         account.setUsername(username);
         account.setRole(AccountRole.USER);
         account.setPasswordHash(passwordEncoder.encode(password));
-        accountRepository.save(account);
+        return accountRepository.save(account);
     }
 }
